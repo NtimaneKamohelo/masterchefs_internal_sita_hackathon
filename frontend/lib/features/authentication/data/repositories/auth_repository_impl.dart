@@ -1,4 +1,5 @@
 import 'package:masterchefs_internal_sita_hackathon/features/authentication/data/datasources/auth_remote_datasource.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -7,15 +8,10 @@ import '../../domain/repositories/auth_repository.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
 
-  AuthRepositoryImpl({
-    required this.remoteDataSource,
-  });
+  AuthRepositoryImpl({required this.remoteDataSource});
 
-  AuthUser _mapUser(dynamic user) {
-    return AuthUser(
-      id: user.id,
-      email: user.email ?? '',
-    );
+  AuthUser _mapUser(User user) {
+    return AuthUser(id: user.id, email: user.email ?? '');
   }
 
   @override
@@ -24,21 +20,21 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     final response = await remoteDataSource.register(
-      email: email,
+      email: email.trim(),
       password: password,
     );
 
-    if (response.user == null) {
-      throw Exception('Account registration failed.');
+    final user = response.user;
+
+    if (user == null) {
+      throw const AuthException('Registration failed.');
     }
 
-    // When email confirmation is enabled,
-    // Supabase returns a user without an active session.
     if (response.session == null) {
       return null;
     }
 
-    return _mapUser(response.user!);
+    return _mapUser(user);
   }
 
   @override
@@ -47,43 +43,48 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     final response = await remoteDataSource.login(
-      email: email,
+      email: email.trim(),
       password: password,
     );
 
-    if (response.user == null) {
-      throw Exception('Authentication failed.');
+    final user = response.user;
+
+    if (user == null) {
+      throw const AuthException('Authentication failed.');
     }
 
-    return _mapUser(response.user!);
+    return _mapUser(user);
   }
 
   @override
-  Future<void> logout() async {
-    await remoteDataSource.logout();
+  Future<void> logout() {
+    return remoteDataSource.logout();
   }
 
   @override
-  Future<void> resetPassword({
-    required String email,
-  }) async {
-    await remoteDataSource.resetPassword(
-      email: email,
-    );
+  Future<void> resetPassword({required String email}) {
+    return remoteDataSource.resetPassword(email: email.trim());
+  }
+
+  @override
+  Future<void> resendVerificationEmail({required String email}) {
+    return remoteDataSource.resendVerificationEmail(email: email.trim());
+  }
+
+  @override
+  Future<void> updatePassword({required String password}) async {
+    await remoteDataSource.updatePassword(password: password);
   }
 
   @override
   AuthUser? get getCurrentUser {
     final user = remoteDataSource.currentUser;
 
-    if (user == null) return null;
-
-    return AuthUser(
-      id: user.id,
-      email: user.email ?? '',
-    );
+    return user == null ? null : _mapUser(user);
   }
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  set getCurrentUser(AuthUser? value) {
+    // TODO: implement getCurrentUser
+  }
 }

@@ -35,6 +35,8 @@ class AuthEmailVerificationPending extends AuthState {
 
 class AuthPasswordResetSent extends AuthState {}
 
+class AuthPasswordUpdated extends AuthState {}
+
 class AuthError extends AuthState {
   final String message;
 

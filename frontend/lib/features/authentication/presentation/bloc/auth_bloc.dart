@@ -1,22 +1,62 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:masterchefs_internal_sita_hackathon/features/authentication/presentation/bloc/auth_event.dart';
-import 'package:masterchefs_internal_sita_hackathon/features/authentication/presentation/bloc/auth_state.dart';
+import 'package:masterchefs_internal_sita_hackathon/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
-import '../../domain/repositories/auth_repository.dart';
-
+import '../../domain/usecases/register_user.dart';
+import '../../domain/usecases/login_user.dart';
+import '../../domain/usecases/logout_user.dart';
+import '../../domain/usecases/reset_password.dart';
+import '../../domain/usecases/resend_verification_email.dart';
+import '../../domain/usecases/update_password.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
+//import '../../domain/repositories/auth_repository.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository repository;
+  final RegisterUser registerUser;
+  final LoginUser loginUser;
+  final LogoutUser logoutUser;
+  final ResetPassword resetPassword;
+  final ResendVerificationEmail resendVerificationEmail;
+  final UpdatePassword updatePassword;
+
+  final AuthRepository _repository;
 
   AuthBloc({
-    required this.repository,
-  }) : super(AuthInitial()) {
+    required this.registerUser,
+    required this.loginUser,
+    required this.logoutUser,
+    required this.resetPassword,
+    required this.resendVerificationEmail,
+    required this.updatePassword,
+    required AuthRepository repository,
+  }) : _repository = repository,
+       super(AuthInitial()) {
+    on<AuthSessionRequested>(_onSessionRequested);
     on<AuthRegisterRequested>(_onRegister);
     on<AuthLoginRequested>(_onLogin);
     on<AuthLogoutRequested>(_onLogout);
     on<AuthPasswordResetRequested>(_onPasswordReset);
-    on<AuthSessionRequested>(_onSession);
+    on<AuthVerificationResendRequested>(_onResendVerification);
+    on<AuthPasswordUpdateRequested>(_onPasswordUpdate);
+  }
+
+  Future<void> _onSessionRequested(
+    AuthSessionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = _repository.getCurrentUser;
+
+    if (user == null) {
+      if (state is AuthEmailVerificationPending) {
+        return;
+      }
+
+      emit(AuthUnauthenticated());
+      return;
+    }
+
+    emit(AuthAuthenticated(user));
   }
 
   Future<void> _onRegister(
@@ -26,13 +66,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      final user = await repository.register(
+      final user = await registerUser(
         email: event.email.trim(),
         password: event.password,
       );
 
       if (user == null) {
-        emit(AuthEmailVerificationPending(event.email));
+        emit(AuthEmailVerificationPending(event.email.trim()));
       } else {
         emit(AuthAuthenticated(user));
       }
@@ -50,7 +90,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      final user = await repository.login(
+      final user = await loginUser(
         email: event.email.trim(),
         password: event.password,
       );
@@ -70,10 +110,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      await repository.logout();
+      await logoutUser();
       emit(AuthUnauthenticated());
     } catch (_) {
-      emit(const AuthError('Unable to log out.'));
+      emit(const AuthError('Unable to log out. Please try again.'));
     }
   }
 
@@ -84,32 +124,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      await repository.resetPassword(
-        email: event.email.trim(),
-      );
-
+      await resetPassword(email: event.email.trim());
       emit(AuthPasswordResetSent());
     } on AuthException catch (e) {
       emit(AuthError(_mapError(e)));
     } catch (_) {
-      emit(const AuthError('Unable to send password reset email.'));
+      emit(const AuthError('Unable to process your request.'));
     }
   }
 
-  Future<void> _onSession(
-    AuthSessionRequested event,
+  Future<void> _onResendVerification(
+    AuthVerificationResendRequested event,
     Emitter<AuthState> emit,
   ) async {
-    try {
-      final user = repository.getCurrentUser;
+    emit(AuthLoading());
 
-      if (user == null) {
-        emit(AuthUnauthenticated());
-      } else {
-        emit(AuthAuthenticated(user));
-      }
+    try {
+      await resendVerificationEmail(email: event.email);
+      emit(AuthEmailVerificationPending(event.email));
+    } on AuthException catch (e) {
+      emit(AuthError(_mapError(e)));
     } catch (_) {
-      emit(AuthUnauthenticated());
+      emit(const AuthError('Unable to resend verification email.'));
+    }
+  }
+
+  Future<void> _onPasswordUpdate(
+    AuthPasswordUpdateRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      await updatePassword(password: event.password);
+      emit(AuthPasswordUpdated());
+    } on AuthException catch (e) {
+      emit(AuthError(_mapError(e)));
+    } catch (_) {
+      emit(const AuthError('Unable to update your password.'));
     }
   }
 
@@ -121,14 +173,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       case 'email_not_confirmed':
         return 'Please verify your email before logging in.';
 
-      case 'user_already_exists':
-        return 'An account with this email already exists.';
-
       case 'weak_password':
         return 'Your password does not meet security requirements.';
 
       case 'over_email_send_rate_limit':
-        return 'Too many email requests. Try again later.';
+        return 'Too many requests. Please try again later.';
 
       default:
         return 'Authentication failed. Please try again.';
