@@ -22,6 +22,7 @@ import 'package:grantsandbenfits/features/documents/data/datasources/document_ve
 import 'package:grantsandbenfits/features/documents/data/datasources/local_ai_document_agent_data_source.dart';
 import 'package:grantsandbenfits/features/documents/data/document_audit_logger.dart';
 import 'package:grantsandbenfits/features/documents/data/repositories/document_verification_repository_impl.dart';
+import 'package:grantsandbenfits/features/documents/data/services/document_ocr_service.dart';
 import 'package:grantsandbenfits/features/documents/domain/repositories/document_verification_repository.dart';
 import 'package:grantsandbenfits/features/documents/domain/usecases/verify_certified_document.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
@@ -101,11 +102,14 @@ Future<void> configureDependencies(AppConfig config) async {
     ),
   );
 
+  getIt.registerLazySingleton<DocumentOcrService>(
+    MlKitDocumentOcrService.new,
+  );
   getIt.registerLazySingleton<DocumentAuditLogger>(
     () => DocumentAuditLogger(getIt()),
   );
   getIt.registerLazySingleton<DocumentVerificationDataSource>(
-    LocalAiDocumentAgentDataSource.new,
+    () => LocalAiDocumentAgentDataSource(ocrService: getIt()),
   );
   getIt.registerLazySingleton<DocumentVerificationRepository>(
     () => DocumentVerificationRepositoryImpl(

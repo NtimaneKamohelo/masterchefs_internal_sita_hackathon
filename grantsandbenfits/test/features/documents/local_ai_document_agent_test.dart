@@ -99,4 +99,33 @@ void main() {
 
     expect(result.verdict, VerificationVerdict.notAuthentic);
   });
+
+  test('detects Evaton SAPS Client Service Centre stamp with spaced date and bilingual block', () async {
+    final bytes = pdfBytes('''
+SOUTH AFRICAN POLICE SERVICE
+CLIENT SERVICE CENTRE
+2023 -01- 0 3
+EVATON
+SOUTH AFRICAN POLICE SERVICE
+EK SERTIFISEER DAT HIERDIE DOKUMENT
+I CERTIFY THAT THIS DOCUMENT IS A TRUE REPRODUCTION (COPY) OF THE ORIGINAL DOCUMENT
+HANDTEKENING / SIGNATURE
+MAGS NOMMER / FORCE NUMBER 70133581
+Department of Home Affairs Identification Act, Act 68 of 1997
+''');
+    final result = await agent.analyze(
+      UploadedDocument(
+        fileName: 'ID Jan 03 2023 (1).pdf',
+        sizeBytes: bytes.length,
+        type: DocumentType.southAfricanId,
+        bytes: bytes,
+      ),
+    );
+
+    expect(result.authority, CertifyingAuthority.saps);
+    expect(result.extractedSummary['SAPS Station'], 'EVATON');
+    expect(result.extractedSummary['Certification date'], '2023-01-03');
+    // Certified in 2023 relative to 2026-11-27 -> detected SAPS stamp, flagged for 90-day expiry review
+    expect(result.verdict, VerificationVerdict.needsReview);
+  });
 }

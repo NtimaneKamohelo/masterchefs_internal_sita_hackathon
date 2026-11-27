@@ -174,7 +174,7 @@ class DocumentsPage extends StatelessWidget {
                       fileName: 'synthetic_id_saps_certified.pdf',
                       type: DocumentType.southAfricanId,
                       sampleContent:
-                      'SOUTH AFRICAN POLICE SERVICE SAPS CERTIFIED TRUE COPY 2026-11-15 ID 9901015009087',
+                      'SOUTH AFRICAN POLICE SERVICE\nCLIENT SERVICE CENTRE\n2026 -11- 15\nEVATON\nSOUTH AFRICAN POLICE SERVICE\nI CERTIFY THAT THIS DOCUMENT IS A TRUE REPRODUCTION (COPY) OF THE ORIGINAL DOCUMENT\nFORCE NUMBER 70133581\nID 9901015009087',
                     ),
                   ),
                   ActionChip(
