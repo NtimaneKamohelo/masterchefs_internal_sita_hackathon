@@ -45,7 +45,7 @@ class LocalBursaryDataSource {
         DocumentType.proofOfResidence,
       ],
       eligibilityRules: [
-        'South African citizen with combined household income <= R350,000/year.',
+        'South African citizen with combined annual household income <= R350,000 (or <= R600,000 for applicants living with a disability).',
         'Certified SA ID and household proof of income (SAPS or Post Office).',
         'No application is declined automatically; an official verifies all cases.',
       ],

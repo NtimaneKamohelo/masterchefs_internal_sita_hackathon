@@ -3,6 +3,7 @@ abstract final class StorageKeys {
   static const sessionUserId = 'gb.session.userId';
   static const authAudit = 'gb.auth.audit';
   static const documentAudit = 'gb.documents.audit';
+  static const decisionAudit = 'gb.decisions.audit';
   static const verifiedDocuments = 'gb.documents.verified';
   static const latestDocuments = 'gb.documents.latest';
 

@@ -72,7 +72,11 @@ class BursariesPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '${profile.fullName}\nID: ${profile.maskedIdNumber}\n${profile.formattedAddress}',
+                      '${profile.fullName}\n'
+                      'ID: ${profile.maskedIdNumber}\n'
+                      '${profile.formattedAddress}\n'
+                      'Household income: R${profile.annualHouseholdIncome} / yr • '
+                      'Disability: ${profile.hasDisability ? "Yes (R600,000 NSFAS threshold)" : "No (R350,000 NSFAS threshold)"}',
                       style: const TextStyle(height: 1.4),
                     ),
                   )

@@ -30,7 +30,9 @@ class _ProfilePageState extends State<ProfilePage> {
   final _city = TextEditingController();
   final _postalCode = TextEditingController();
   final _phone = TextEditingController();
+  final _income = TextEditingController();
   String _province = 'Gauteng';
+  bool _hasDisability = false;
   bool _hydrated = false;
 
   @override
@@ -41,6 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _city.dispose();
     _postalCode.dispose();
     _phone.dispose();
+    _income.dispose();
     super.dispose();
   }
 
@@ -58,6 +61,10 @@ class _ProfilePageState extends State<ProfilePage> {
           : 'Gauteng';
       _postalCode.text = profile.postalCode;
       _phone.text = profile.phoneNumber;
+      _income.text = profile.annualHouseholdIncome > 0
+          ? '${profile.annualHouseholdIncome}'
+          : '';
+      _hasDisability = profile.hasDisability;
     } else if (authUser != null && authUser.displayName.isNotEmpty) {
       _fullName.text = authUser.displayName;
     }
@@ -73,12 +80,15 @@ class _ProfilePageState extends State<ProfilePage> {
       _province = 'Gauteng';
       _postalCode.text = '0048';
       _phone.text = '0821234567';
+      _income.text = '280000';
+      _hasDisability = false;
     });
   }
 
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final userId = context.read<AuthBloc>().state.user?.id ?? '';
+    final parsedIncome = int.tryParse(_income.text.trim()) ?? 0;
     context.read<ProfileBloc>().add(
       ProfileSaveRequested(
         UserProfile(
@@ -90,6 +100,8 @@ class _ProfilePageState extends State<ProfilePage> {
           province: _province,
           postalCode: _postalCode.text,
           phoneNumber: _phone.text,
+          annualHouseholdIncome: parsedIncome,
+          hasDisability: _hasDisability,
         ),
       ),
     );
@@ -300,13 +312,52 @@ class _ProfilePageState extends State<ProfilePage> {
                       controller: _phone,
                       label: 'Phone number (optional)',
                       keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.done,
+                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.telephoneNumber],
-                      onSubmitted: (_) => _submit(),
                       validator: (value) =>
                           InputValidator.phoneNumber(value ?? ''),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _income,
+                      label: 'Combined annual household income (ZAR)',
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(9),
+                      ],
+                      onSubmitted: (_) => _submit(),
+                      validator: (value) {
+                        final raw = (value ?? '').trim();
+                        if (raw.isEmpty) {
+                          return 'Enter your combined annual household income.';
+                        }
+                        if (int.tryParse(raw) == null) {
+                          return 'Enter a valid whole Rand amount.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _hasDisability,
+                      onChanged: state.isSaving
+                          ? null
+                          : (value) => setState(() => _hasDisability = value),
+                      title: const Text(
+                        'Applicant living with a disability',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        _hasDisability
+                            ? 'NSFAS household income threshold: R600,000 / year'
+                            : 'Standard NSFAS household income threshold: R350,000 / year',
+                        style: const TextStyle(color: AppColors.muted),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     PrimaryButton(
                       label: 'Save profile',
                       isLoading: state.isSaving,

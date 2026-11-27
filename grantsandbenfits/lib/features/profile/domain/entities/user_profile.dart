@@ -22,6 +22,8 @@ class UserProfile extends Equatable {
     required this.province,
     required this.postalCode,
     this.phoneNumber = '',
+    this.annualHouseholdIncome = 0,
+    this.hasDisability = false,
     this.updatedAt,
   });
 
@@ -33,7 +35,15 @@ class UserProfile extends Equatable {
   final String province;
   final String postalCode;
   final String phoneNumber;
+  final int annualHouseholdIncome;
+  final bool hasDisability;
   final DateTime? updatedAt;
+
+  /// NSFAS threshold: R350,000/year standard, R600,000/year for disability.
+  int get nsfasIncomeThreshold => hasDisability ? 600000 : 350000;
+
+  bool get meetsNsfasIncomeThreshold =>
+      annualHouseholdIncome <= nsfasIncomeThreshold;
 
   /// POPIA-minimised ID reference for display in summaries.
   String get maskedIdNumber {
@@ -54,6 +64,8 @@ class UserProfile extends Equatable {
     province,
     postalCode,
     phoneNumber,
+    annualHouseholdIncome,
+    hasDisability,
     updatedAt,
   ];
 }

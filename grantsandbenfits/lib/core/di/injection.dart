@@ -25,6 +25,7 @@ import 'package:grantsandbenfits/features/documents/data/repositories/document_v
 import 'package:grantsandbenfits/features/documents/domain/repositories/document_verification_repository.dart';
 import 'package:grantsandbenfits/features/documents/domain/usecases/verify_certified_document.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
+import 'package:grantsandbenfits/features/eligibility/data/official_decision_logger.dart';
 import 'package:grantsandbenfits/features/eligibility/domain/usecases/evaluate_eligibility.dart';
 import 'package:grantsandbenfits/features/eligibility/presentation/bloc/eligibility_bloc.dart';
 import 'package:grantsandbenfits/features/profile/data/datasources/local_profile_data_source.dart';
@@ -150,12 +151,18 @@ Future<void> configureDependencies(AppConfig config) async {
   );
 
   getIt.registerLazySingleton(
+    () => OfficialDecisionLogger(getIt()),
+  );
+  getIt.registerLazySingleton(
     () => EvaluateEligibility(
       profileRepository: getIt(),
       documentRepository: getIt(),
     ),
   );
   getIt.registerFactory(
-    () => EligibilityBloc(evaluateEligibility: getIt()),
+    () => EligibilityBloc(
+      evaluateEligibility: getIt(),
+      decisionLogger: getIt(),
+    ),
   );
 }

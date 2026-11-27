@@ -15,3 +15,16 @@ final class EligibilityLoadRequested extends EligibilityEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+final class OfficialDecisionSubmitted extends EligibilityEvent {
+  const OfficialDecisionSubmitted({
+    required this.action,
+    required this.reason,
+  });
+
+  final String action;
+  final String reason;
+
+  @override
+  List<Object?> get props => [action, reason];
+}

@@ -90,7 +90,7 @@ class EvaluateEligibility {
     );
 
     final (recommendation, confidence, requiresReview, explanation) = _score(
-      profileComplete: profileComplete,
+      profile: profile,
       idValidated: idValidated,
       validatedCount: validatedCount,
       hasReviewDoc: hasReviewDoc,
@@ -113,12 +113,26 @@ class EvaluateEligibility {
   }
 
   (EligibilityRecommendation, double, bool, String) _score({
-    required bool profileComplete,
+    required UserProfile? profile,
     required bool idValidated,
     required int validatedCount,
     required bool hasReviewDoc,
     required bool hasRejectedDoc,
   }) {
+    final profileComplete = profile != null;
+    if (profile != null && !profile.meetsNsfasIncomeThreshold) {
+      final threshold = profile.nsfasIncomeThreshold;
+      return (
+        EligibilityRecommendation.needsReview,
+        0.78,
+        true,
+        'Flagged under rule INC-01: Declared annual household income (R${profile.annualHouseholdIncome}) '
+            'exceeds the applicable NSFAS threshold of R$threshold '
+            '(${profile.hasDisability ? "disability threshold" : "standard threshold"}). '
+            'Escalated for official review — no application is declined automatically.',
+      );
+    }
+
     if (profileComplete && idValidated && validatedCount >= 2 && !hasReviewDoc && !hasRejectedDoc) {
       return (
         EligibilityRecommendation.likelyEligible,

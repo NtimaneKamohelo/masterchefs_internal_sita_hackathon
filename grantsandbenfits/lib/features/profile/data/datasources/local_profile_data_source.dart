@@ -29,6 +29,9 @@ class LocalProfileDataSource implements ProfileDataSource {
       province: decoded['province'] as String? ?? southAfricanProvinces.first,
       postalCode: decoded['postalCode'] as String? ?? '',
       phoneNumber: decoded['phoneNumber'] as String? ?? '',
+      annualHouseholdIncome:
+          (decoded['annualHouseholdIncome'] as num?)?.toInt() ?? 0,
+      hasDisability: decoded['hasDisability'] == true,
       updatedAt: updatedRaw is String ? DateTime.tryParse(updatedRaw) : null,
     );
   }
@@ -44,6 +47,8 @@ class LocalProfileDataSource implements ProfileDataSource {
       province: profile.province,
       postalCode: profile.postalCode,
       phoneNumber: profile.phoneNumber,
+      annualHouseholdIncome: profile.annualHouseholdIncome,
+      hasDisability: profile.hasDisability,
       updatedAt: profile.updatedAt ?? DateTime.now().toUtc(),
     );
     await _store.write(
@@ -56,6 +61,8 @@ class LocalProfileDataSource implements ProfileDataSource {
         'province': saved.province,
         'postalCode': saved.postalCode,
         'phoneNumber': saved.phoneNumber,
+        'annualHouseholdIncome': saved.annualHouseholdIncome,
+        'hasDisability': saved.hasDisability,
         'updatedAt': saved.updatedAt?.toIso8601String(),
       }),
     );

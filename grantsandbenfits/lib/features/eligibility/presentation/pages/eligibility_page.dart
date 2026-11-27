@@ -48,6 +48,14 @@ class EligibilityPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              if (state.errorMessage != null) ...[
+                FormMessage(message: state.errorMessage!, isError: true),
+                const SizedBox(height: 12),
+              ],
+              if (state.infoMessage != null) ...[
+                FormMessage(message: state.infoMessage!, isError: false),
+                const SizedBox(height: 12),
+              ],
               _RecommendationCard(assessment: assessment),
               const SizedBox(height: 22),
               Row(
@@ -80,6 +88,8 @@ class EligibilityPage extends StatelessWidget {
               const SizedBox(height: 12),
               for (final rule in assessment.popiaRules)
                 _PopiaRuleCard(rule: rule),
+              const SizedBox(height: 24),
+              const _OfficialReviewSection(),
             ],
           );
         },
@@ -366,6 +376,113 @@ class _PopiaRuleCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OfficialReviewSection extends StatefulWidget {
+  const _OfficialReviewSection();
+
+  @override
+  State<_OfficialReviewSection> createState() => _OfficialReviewSectionState();
+}
+
+class _OfficialReviewSectionState extends State<_OfficialReviewSection> {
+  final _reason = TextEditingController();
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  void _record(String action) {
+    context.read<EligibilityBloc>().add(
+      OfficialDecisionSubmitted(action: action, reason: _reason.text),
+    );
+    _reason.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auditTrail = context.watch<EligibilityBloc>().state.auditTrail;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Official Decision & Audit Trail',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Human-in-the-loop: An accountable official approves, escalates, or overrides the AI recommendation with a PAJA reason.',
+          style: TextStyle(color: AppColors.muted, height: 1.35),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _reason,
+          maxLines: 2,
+          decoration: const InputDecoration(
+            labelText: 'Official PAJA reason (required)',
+            hintText: 'e.g. Verified SAPS stamp and household income within NSFAS limit.',
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: () => _record('Approved'),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.forest),
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Approve'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _record('Escalated for Review'),
+              icon: const Icon(Icons.rate_review_outlined, size: 16),
+              label: const Text('Escalate'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _record('Overridden'),
+              icon: const Icon(Icons.gavel_outlined, size: 16),
+              label: const Text('Override'),
+            ),
+          ],
+        ),
+        if (auditTrail.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Recorded Audit Trail',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          for (final entry in auditTrail)
+            Card(
+              elevation: 0,
+              color: AppColors.white,
+              margin: const EdgeInsets.only(bottom: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: AppColors.line),
+              ),
+              child: ListTile(
+                title: Text(
+                  '${entry.action} • ${entry.ruleVersion}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                  ),
+                ),
+                subtitle: Text(
+                  '${entry.reason}\n${entry.recordedAt.toLocal().toString().substring(0, 16)}',
+                  style: const TextStyle(fontSize: 12.5, height: 1.35),
+                ),
+              ),
+            ),
+        ],
+      ],
     );
   }
 }

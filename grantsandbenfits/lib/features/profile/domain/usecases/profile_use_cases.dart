@@ -66,6 +66,12 @@ class SaveUserProfile {
     final phoneError = InputValidator.phoneNumber(cleanPhone);
     if (phoneError != null) return Err(ValidationFailure(phoneError));
 
+    if (profile.annualHouseholdIncome < 0) {
+      return const Err(
+        ValidationFailure('Annual household income cannot be negative.'),
+      );
+    }
+
     return _repository.saveProfile(
       UserProfile(
         userId: profile.userId,
@@ -76,6 +82,8 @@ class SaveUserProfile {
         province: profile.province,
         postalCode: cleanPostal,
         phoneNumber: cleanPhone,
+        annualHouseholdIncome: profile.annualHouseholdIncome,
+        hasDisability: profile.hasDisability,
         updatedAt: DateTime.now().toUtc(),
       ),
     );

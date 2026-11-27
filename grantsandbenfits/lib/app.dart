@@ -36,6 +36,7 @@ class _GrantsAppState extends State<GrantsApp> {
     return BlocProvider.value(
       value: widget.authBloc,
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         title: 'Grants & Benefits',
         theme: AppTheme.light(),
         routerConfig: _router,
@@ -55,6 +56,7 @@ class ConfigurationErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: SafeArea(
           child: Padding(
