@@ -1,11 +1,11 @@
 {
-    "name": "grantsandbenfits",
-    "short_name": "grantsandbenfits",
+    "name": "Grants & Benefits",
+    "short_name": "Grants",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "bursary and scheme",
+    "background_color": "#08382C",
+    "theme_color": "#0F6E56",
+    "description": "Grants and benefits eligibility assistant",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

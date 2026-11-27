@@ -43,3 +43,20 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets and local configuration. Firebase client config is a public
+# identifier, but it still stays out of git. Never commit a Gemini key.
+env/env.json
+.env
+.env.*
+**/.env
+**/.env.*
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+*.jks
+*.keystore
+*serviceAccount*.json
+*service-account*.json
