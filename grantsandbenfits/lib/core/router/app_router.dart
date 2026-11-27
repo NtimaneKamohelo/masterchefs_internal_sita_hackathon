@@ -11,9 +11,18 @@ import 'package:grantsandbenfits/features/auth/presentation/pages/register_page.
 import 'package:grantsandbenfits/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:grantsandbenfits/features/auth/presentation/pages/splash_page.dart';
 import 'package:grantsandbenfits/features/auth/presentation/pages/verify_email_page.dart';
+import 'package:grantsandbenfits/features/bursaries/presentation/bloc/bursaries_bloc.dart';
+import 'package:grantsandbenfits/features/bursaries/presentation/bloc/bursaries_event.dart';
+import 'package:grantsandbenfits/features/bursaries/presentation/pages/bursaries_page.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
 import 'package:grantsandbenfits/features/documents/presentation/pages/documents_page.dart';
+import 'package:grantsandbenfits/features/eligibility/presentation/bloc/eligibility_bloc.dart';
+import 'package:grantsandbenfits/features/eligibility/presentation/bloc/eligibility_event.dart';
+import 'package:grantsandbenfits/features/eligibility/presentation/pages/eligibility_page.dart';
 import 'package:grantsandbenfits/features/home/presentation/pages/home_page.dart';
+import 'package:grantsandbenfits/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:grantsandbenfits/features/profile/presentation/bloc/profile_event.dart';
+import 'package:grantsandbenfits/features/profile/presentation/pages/profile_page.dart';
 
 String? authRedirect({
   required AuthStatus status,
@@ -25,7 +34,13 @@ String? authRedirect({
     RoutePaths.forgotPassword,
     RoutePaths.resetPassword,
   };
-  const authenticatedRoutes = {RoutePaths.home, RoutePaths.documents};
+  const authenticatedRoutes = {
+    RoutePaths.home,
+    RoutePaths.profile,
+    RoutePaths.bursaries,
+    RoutePaths.documents,
+    RoutePaths.eligibility,
+  };
 
   if (status == AuthStatus.unknown) {
     return location == RoutePaths.splash ? null : RoutePaths.splash;
@@ -82,11 +97,44 @@ GoRouter createRouter({
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
+        path: RoutePaths.profile,
+        builder: (context, state) {
+          final userId = authBloc.state.user?.id ?? '';
+          return BlocProvider(
+            create: (_) =>
+                getIt<ProfileBloc>()..add(ProfileLoadRequested(userId)),
+            child: const ProfilePage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: RoutePaths.bursaries,
+        builder: (context, state) {
+          final userId = authBloc.state.user?.id ?? '';
+          return BlocProvider(
+            create: (_) =>
+                getIt<BursariesBloc>()..add(BursariesLoadRequested(userId)),
+            child: const BursariesPage(),
+          );
+        },
+      ),
+      GoRoute(
         path: RoutePaths.documents,
         builder: (context, state) => BlocProvider(
           create: (_) => getIt<DocumentVerificationBloc>(),
           child: const DocumentsPage(),
         ),
+      ),
+      GoRoute(
+        path: RoutePaths.eligibility,
+        builder: (context, state) {
+          final userId = authBloc.state.user?.id ?? '';
+          return BlocProvider(
+            create: (_) => getIt<EligibilityBloc>()
+              ..add(EligibilityLoadRequested(userId)),
+            child: const EligibilityPage(),
+          );
+        },
       ),
     ],
   );

@@ -4,10 +4,13 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:grantsandbenfits/core/constants/route_paths.dart';
 import 'package:grantsandbenfits/core/theme/app_colors.dart';
 import 'package:grantsandbenfits/core/widgets/form_message.dart';
 import 'package:grantsandbenfits/core/widgets/primary_button.dart';
 import 'package:grantsandbenfits/features/documents/domain/entities/document_type.dart';
+import 'package:grantsandbenfits/features/documents/domain/entities/document_verification_result.dart';
 import 'package:grantsandbenfits/features/documents/domain/entities/uploaded_document.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_event.dart';
@@ -209,6 +212,14 @@ class DocumentsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 VerificationResultCard(result: state.latestResult!),
+                if (state.latestResult!.verdict ==
+                    VerificationVerdict.authentic) ...[
+                  const SizedBox(height: 14),
+                  PrimaryButton(
+                    label: 'Proceed to Step 3: Apply for Bursaries',
+                    onPressed: () => context.push(RoutePaths.bursaries),
+                  ),
+                ],
               ],
               if (state.history.length > 1) ...[
                 const SizedBox(height: 24),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:grantsandbenfits/core/theme/app_colors.dart';
 
 class AppTextField extends StatefulWidget {
@@ -10,6 +11,8 @@ class AppTextField extends StatefulWidget {
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.inputFormatters,
+    this.maxLength,
     this.onSubmitted,
     super.key,
   });
@@ -21,6 +24,8 @@ class AppTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
   final ValueChanged<String>? onSubmitted;
 
   @override
@@ -38,6 +43,8 @@ class _AppTextFieldState extends State<AppTextField> {
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       autofillHints: widget.autofillHints,
+      inputFormatters: widget.inputFormatters,
+      maxLength: widget.maxLength,
       onFieldSubmitted: widget.onSubmitted,
       validator: widget.validator,
       decoration: InputDecoration(

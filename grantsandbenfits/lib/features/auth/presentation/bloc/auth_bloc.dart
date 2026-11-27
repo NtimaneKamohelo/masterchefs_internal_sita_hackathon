@@ -235,7 +235,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(state.copyWith(isSubmitting: true, clearError: true, clearInfo: true));
     final result = await _confirmEmailVerification(event.code);
-    _emitAuthResult(result, emit, clearVerificationCode: true);
+    if (isClosed) return;
+    switch (result) {
+      case Ok():
+        await _signOut();
+        if (isClosed) return;
+        emit(
+          AuthState(
+            status: AuthStatus.unauthenticated,
+            infoMessage: 'Email verified. Please sign in with your account.',
+            issuesOutOfBandCodes: state.issuesOutOfBandCodes,
+          ),
+        );
+      case Err(:final failure):
+        _emitFailure(failure, emit);
+    }
   }
 
   Future<void> _onSignOut(

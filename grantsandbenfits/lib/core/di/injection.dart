@@ -13,6 +13,11 @@ import 'package:grantsandbenfits/features/auth/data/repositories/auth_repository
 import 'package:grantsandbenfits/features/auth/domain/repositories/auth_repository.dart';
 import 'package:grantsandbenfits/features/auth/domain/usecases/auth_use_cases.dart';
 import 'package:grantsandbenfits/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:grantsandbenfits/features/bursaries/data/datasources/local_bursary_data_source.dart';
+import 'package:grantsandbenfits/features/bursaries/data/repositories/bursary_repository_impl.dart';
+import 'package:grantsandbenfits/features/bursaries/domain/repositories/bursary_repository.dart';
+import 'package:grantsandbenfits/features/bursaries/domain/usecases/bursary_use_cases.dart';
+import 'package:grantsandbenfits/features/bursaries/presentation/bloc/bursaries_bloc.dart';
 import 'package:grantsandbenfits/features/documents/data/datasources/document_verification_data_source.dart';
 import 'package:grantsandbenfits/features/documents/data/datasources/local_ai_document_agent_data_source.dart';
 import 'package:grantsandbenfits/features/documents/data/document_audit_logger.dart';
@@ -20,6 +25,14 @@ import 'package:grantsandbenfits/features/documents/data/repositories/document_v
 import 'package:grantsandbenfits/features/documents/domain/repositories/document_verification_repository.dart';
 import 'package:grantsandbenfits/features/documents/domain/usecases/verify_certified_document.dart';
 import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
+import 'package:grantsandbenfits/features/eligibility/domain/usecases/evaluate_eligibility.dart';
+import 'package:grantsandbenfits/features/eligibility/presentation/bloc/eligibility_bloc.dart';
+import 'package:grantsandbenfits/features/profile/data/datasources/local_profile_data_source.dart';
+import 'package:grantsandbenfits/features/profile/data/datasources/profile_data_source.dart';
+import 'package:grantsandbenfits/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:grantsandbenfits/features/profile/domain/repositories/profile_repository.dart';
+import 'package:grantsandbenfits/features/profile/domain/usecases/profile_use_cases.dart';
+import 'package:grantsandbenfits/features/profile/presentation/bloc/profile_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -94,10 +107,55 @@ Future<void> configureDependencies(AppConfig config) async {
     LocalAiDocumentAgentDataSource.new,
   );
   getIt.registerLazySingleton<DocumentVerificationRepository>(
-    () => DocumentVerificationRepositoryImpl(remote: getIt(), audit: getIt()),
+    () => DocumentVerificationRepositoryImpl(
+      remote: getIt(),
+      audit: getIt(),
+      store: getIt(),
+    ),
   );
   getIt.registerLazySingleton(() => VerifyCertifiedDocument(getIt()));
   getIt.registerFactory(
     () => DocumentVerificationBloc(verifyCertifiedDocument: getIt()),
+  );
+
+  getIt.registerLazySingleton<ProfileDataSource>(
+    () => LocalProfileDataSource(getIt()),
+  );
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton(() => LoadUserProfile(getIt()));
+  getIt.registerLazySingleton(() => SaveUserProfile(getIt()));
+  getIt.registerFactory(
+    () => ProfileBloc(loadProfile: getIt(), saveProfile: getIt()),
+  );
+
+  getIt.registerLazySingleton(() => LocalBursaryDataSource(getIt()));
+  getIt.registerLazySingleton<BursaryRepository>(
+    () => BursaryRepositoryImpl(getIt()),
+  );
+  getIt.registerLazySingleton(
+    () => LoadBursariesDashboard(
+      bursaryRepository: getIt(),
+      profileRepository: getIt(),
+      documentRepository: getIt(),
+    ),
+  );
+  getIt.registerLazySingleton(() => SubmitBursaryApplication(getIt()));
+  getIt.registerFactory(
+    () => BursariesBloc(
+      loadDashboard: getIt(),
+      submitApplication: getIt(),
+    ),
+  );
+
+  getIt.registerLazySingleton(
+    () => EvaluateEligibility(
+      profileRepository: getIt(),
+      documentRepository: getIt(),
+    ),
+  );
+  getIt.registerFactory(
+    () => EligibilityBloc(evaluateEligibility: getIt()),
   );
 }
