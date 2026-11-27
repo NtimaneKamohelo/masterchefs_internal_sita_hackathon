@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:grantsandbenfits/core/constants/route_paths.dart';
 import 'package:grantsandbenfits/core/theme/app_colors.dart';
 import 'package:grantsandbenfits/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:grantsandbenfits/features/auth/presentation/bloc/auth_event.dart';
@@ -74,9 +76,12 @@ class HomePage extends StatelessWidget {
             title: 'Bursaries',
             detail: 'SITA internal bursary and NSFAS, with the rules visible to a policy owner.',
           ),
-          const _NextCard(
-            title: 'Certified documents',
-            detail: 'Upload ID, payslip, transcript, or proof of residence, then check them for mismatches.',
+          _NextCard(
+            title: 'Certified documents — AI Validator',
+            detail:
+                'Upload SAPS or Post Office certified documents. The AI agent checks authenticity, recency, and POPIA compliance.',
+            badge: 'Open',
+            onTap: () => context.push(RoutePaths.documents),
           ),
           const _NextCard(
             title: 'Eligibility decision',
@@ -108,10 +113,17 @@ class _Notice extends StatelessWidget {
 }
 
 class _NextCard extends StatelessWidget {
-  const _NextCard({required this.title, required this.detail});
+  const _NextCard({
+    required this.title,
+    required this.detail,
+    this.badge,
+    this.onTap,
+  });
 
   final String title;
   final String detail;
+  final String? badge;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -121,17 +133,67 @@ class _NextCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: AppColors.line),
+        side: BorderSide(
+          color: onTap != null ? AppColors.forest : AppColors.line,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            Text(detail, style: const TextStyle(color: AppColors.muted, height: 1.35)),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (badge != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.successSurface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              badge!,
+                              style: const TextStyle(
+                                color: AppColors.forestDark,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      detail,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right, color: AppColors.forest),
+              ],
+            ],
+          ),
         ),
       ),
     );

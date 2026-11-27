@@ -13,6 +13,13 @@ import 'package:grantsandbenfits/features/auth/data/repositories/auth_repository
 import 'package:grantsandbenfits/features/auth/domain/repositories/auth_repository.dart';
 import 'package:grantsandbenfits/features/auth/domain/usecases/auth_use_cases.dart';
 import 'package:grantsandbenfits/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:grantsandbenfits/features/documents/data/datasources/document_verification_data_source.dart';
+import 'package:grantsandbenfits/features/documents/data/datasources/local_ai_document_agent_data_source.dart';
+import 'package:grantsandbenfits/features/documents/data/document_audit_logger.dart';
+import 'package:grantsandbenfits/features/documents/data/repositories/document_verification_repository_impl.dart';
+import 'package:grantsandbenfits/features/documents/domain/repositories/document_verification_repository.dart';
+import 'package:grantsandbenfits/features/documents/domain/usecases/verify_certified_document.dart';
+import 'package:grantsandbenfits/features/documents/presentation/bloc/document_verification_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -78,5 +85,19 @@ Future<void> configureDependencies(AppConfig config) async {
       signOut: getIt(),
       issuesOutOfBandCodes: getIt<AuthRepository>().issuesOutOfBandCodes,
     ),
+  );
+
+  getIt.registerLazySingleton<DocumentAuditLogger>(
+    () => DocumentAuditLogger(getIt()),
+  );
+  getIt.registerLazySingleton<DocumentVerificationDataSource>(
+    LocalAiDocumentAgentDataSource.new,
+  );
+  getIt.registerLazySingleton<DocumentVerificationRepository>(
+    () => DocumentVerificationRepositoryImpl(remote: getIt(), audit: getIt()),
+  );
+  getIt.registerLazySingleton(() => VerifyCertifiedDocument(getIt()));
+  getIt.registerFactory(
+    () => DocumentVerificationBloc(verifyCertifiedDocument: getIt()),
   );
 }
